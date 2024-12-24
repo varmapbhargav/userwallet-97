@@ -6,6 +6,8 @@ import { EmailForm } from "@/components/auth/EmailForm";
 import { UsernameForm } from "@/components/auth/UsernameForm";
 import { WalletCreation } from "@/components/auth/WalletCreation";
 import { WalletSuccess } from "@/components/auth/WalletSuccess";
+import { Shield, Smartphone, Microchip, Globe, Key } from "lucide-react";
+import { motion } from "framer-motion";
 
 type AuthStep = "email" | "username" | "wallet-creation" | "wallet-success";
 
@@ -15,6 +17,34 @@ const Index = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
+
+  const features = [
+    {
+      icon: Shield,
+      title: "ERC-4337 Integration",
+      description: "Smart contract-based profile provisioning with non-custodial wallets for decentralized identity management."
+    },
+    {
+      icon: Key,
+      title: "Zero-Knowledge Proofs",
+      description: "Privacy-preserving authentication without exposing sensitive subscription data."
+    },
+    {
+      icon: Globe,
+      title: "Whisper Protocol",
+      description: "Encrypted, decentralized peer-to-peer communication for secure profile management."
+    },
+    {
+      icon: Smartphone,
+      title: "Enhanced eSIM Architecture",
+      description: "Modern approach to profile management with secure authentication and hardware protection."
+    },
+    {
+      icon: Microchip,
+      title: "Secure eUICC",
+      description: "Tamper-resistant hardware ensuring the highest level of profile data protection."
+    }
+  ];
 
   const handleEmailSuccess = (email: string) => {
     setEmail(email);
@@ -32,7 +62,6 @@ const Index = () => {
   };
 
   const handleComplete = () => {
-    // Here you would typically redirect to the dashboard
     console.log("Authentication complete", { email, username, walletAddress });
     setIsOpen(false);
   };
@@ -68,15 +97,59 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <Button 
-        size="lg"
-        className="text-lg px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-        onClick={() => setIsOpen(true)}
-      >
-        Connect Wallet
-      </Button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 py-16 text-center">
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl md:text-6xl font-bold text-gray-900 mb-6"
+        >
+          Next-Gen eSIM Solution
+        </motion.h1>
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto"
+        >
+          Experience the future of mobile connectivity with our decentralized eSIM platform powered by ERC-4337, ZKP, and Whisper Protocol.
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Button 
+            size="lg"
+            className="text-lg px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            onClick={() => setIsOpen(true)}
+          >
+            Connect Wallet
+          </Button>
+        </motion.div>
+      </div>
 
+      {/* Features Grid */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {features.map((feature, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 + 0.5 }}
+              className="p-6 bg-white bg-opacity-50 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <feature.icon className="w-12 h-12 text-blue-500 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
+              <p className="text-gray-600">{feature.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Authentication Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-md">
           <div className="w-full space-y-8">
