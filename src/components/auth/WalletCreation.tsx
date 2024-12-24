@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useWalletContext } from "@/contexts/WalletContext";
 
 interface WalletCreationProps {
   onSuccess: (walletAddress: string) => void;
@@ -10,20 +11,31 @@ interface WalletCreationProps {
 export const WalletCreation = ({ onSuccess }: WalletCreationProps) => {
   const [isGenerating, setIsGenerating] = useState(true);
   const [progress, setProgress] = useState(0);
+  const { connectWallet, isConnecting } = useWalletContext();
 
   useEffect(() => {
     const generateWallet = async () => {
       try {
-        // Simulate wallet generation progress
-        for (let i = 0; i <= 100; i += 20) {
+        // Simulate initial progress
+        for (let i = 0; i <= 50; i += 10) {
           setProgress(i);
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 200));
         }
 
-        // Simulate wallet address generation
-        const mockWalletAddress = "0x" + Math.random().toString(16).substr(2, 40);
-        onSuccess(mockWalletAddress);
-        toast.success("Wallet created successfully!");
+        // Connect real wallet
+        const account = await connectWallet();
+        
+        if (account) {
+          // Complete progress
+          for (let i = 60; i <= 100; i += 20) {
+            setProgress(i);
+            await new Promise((resolve) => setTimeout(resolve, 200));
+          }
+          
+          onSuccess(account.address);
+        } else {
+          throw new Error("Failed to connect wallet");
+        }
       } catch (error) {
         toast.error("Failed to generate wallet. Please try again.");
         setIsGenerating(false);
@@ -31,14 +43,14 @@ export const WalletCreation = ({ onSuccess }: WalletCreationProps) => {
     };
 
     generateWallet();
-  }, [onSuccess]);
+  }, [onSuccess, connectWallet]);
 
   return (
     <div className="space-y-6 text-center">
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Creating your wallet</h3>
         <p className="text-sm text-gray-500">
-          Please wait while we securely generate your wallet
+          Please wait while we securely connect your wallet
         </p>
       </div>
       <div className="flex flex-col items-center justify-center space-y-4">
