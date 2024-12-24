@@ -9,7 +9,7 @@ export const AuthCard = ({ children, className }: AuthCardProps) => {
   return (
     <div
       className={cn(
-        "w-full max-w-md p-8 rounded-2xl bg-white/80 backdrop-blur-lg border border-gray-100 shadow-xl animate-fadeIn",
+        "w-full p-6 rounded-xl bg-white/95 backdrop-blur-sm shadow-sm border border-gray-100 animate-fadeIn",
         className
       )}
     >
