@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface WalletSuccessProps {
   walletAddress: string;
@@ -7,6 +8,13 @@ interface WalletSuccessProps {
 }
 
 export const WalletSuccess = ({ walletAddress, onComplete }: WalletSuccessProps) => {
+  const navigate = useNavigate();
+
+  const handleComplete = () => {
+    onComplete();
+    navigate('/dashboard');
+  };
+
   return (
     <div className="space-y-6 text-center">
       <div className="flex justify-center">
@@ -22,7 +30,7 @@ export const WalletSuccess = ({ walletAddress, onComplete }: WalletSuccessProps)
         </code>
       </div>
       <Button
-        onClick={onComplete}
+        onClick={handleComplete}
         className="w-full h-12 text-base font-medium"
       >
         Continue to Dashboard
