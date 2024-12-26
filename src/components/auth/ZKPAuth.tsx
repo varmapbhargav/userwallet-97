@@ -8,6 +8,7 @@ import {
   ClaimType,
 } from "@sismo-core/sismo-connect-react";
 import { useSismo } from "@/contexts/SismoContext";
+import { motion } from "framer-motion";
 
 interface ZKPAuthProps {
   onSuccess: () => void;
@@ -15,7 +16,7 @@ interface ZKPAuthProps {
 
 export const ZKPAuth = ({ onSuccess }: ZKPAuthProps) => {
   const [isVerifying, setIsVerifying] = useState(false);
-  const { verifyProof, generateChallenge } = useSismo();
+  const { verifyProof } = useSismo();
 
   const handleResponse = async (response: SismoConnectResponse) => {
     setIsVerifying(true);
@@ -36,26 +37,61 @@ export const ZKPAuth = ({ onSuccess }: ZKPAuthProps) => {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
       <div className="space-y-2 text-center">
-        <h3 className="text-lg font-medium">Verify Your Identity</h3>
-        <p className="text-sm text-gray-500">
+        <motion.h3 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-lg font-medium"
+        >
+          Verify Your Identity
+        </motion.h3>
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-sm text-gray-500"
+        >
           Use Sismo to verify your identity without revealing sensitive information
-        </p>
+        </motion.p>
       </div>
-      <SismoConnectButton
-        config={{
-          appId: "0x1234....", // Replace with your Sismo App ID
-          vault: {
-            impersonate: ["0x1234...."], // Optional: For development
-          },
+      <div 
+        style={{ 
+          width: "100%",
+          display: "flex",
+          justifyContent: "center" 
         }}
-        auths={[{ authType: AuthType.VAULT }]}
-        claims={[{ claimType: ClaimType.GTE }]}
-        onResponse={handleResponse}
-        text={isVerifying ? "Verifying..." : "Verify with Sismo"}
-        className="w-full"
-      />
-    </div>
+      >
+        <SismoConnectButton
+          config={{
+            appId: "0x1234....", // Replace with your Sismo App ID
+            vault: {
+              impersonate: ["0x1234...."], // Optional: For development
+            },
+          }}
+          auths={[{ authType: AuthType.VAULT }]}
+          claims={[{ claimType: ClaimType.GTE }]}
+          onResponse={handleResponse}
+          text={isVerifying ? "Verifying..." : "Verify with Sismo"}
+          overrideStyle={{
+            width: "100%",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            backgroundColor: "#3b82f6",
+            color: "white",
+            cursor: "pointer",
+            transition: "all 0.2s",
+            "&:hover": {
+              backgroundColor: "#2563eb",
+            },
+          }}
+        />
+      </div>
+    </motion.div>
   );
 };

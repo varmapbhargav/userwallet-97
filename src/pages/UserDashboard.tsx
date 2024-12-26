@@ -4,10 +4,13 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bell, Cpu, Calendar, MessageSquare, Plus, Edit, Trash2 } from 'lucide-react';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { createWalletClient, http, parseAbi, encodeFunctionData, decodeEventLog, type Hex, parseEther } from 'viem';
 import { mainnet } from 'viem/chains';
 import { ChatInterface } from "@/components/messaging/ChatInterface";
+import { SendMessageModal } from "@/components/modals/SendMessageModal";
+import { ReceiveConfigModal } from "@/components/modals/ReceiveConfigModal";
+import { MintNFTModal } from "@/components/modals/MintNFTModal";
 
 const UserDashboard = () => {
   // State management
@@ -388,174 +391,31 @@ const UserDashboard = () => {
         </Tabs>
 
         {/* Modals */}
-        {showAddProfileModal && (
-          <AddProfileModal
-            onClose={() => setShowAddProfileModal(false)}
-            onSubmit={registerProfile}
-          />
-        )}
-        {showAddSubscriptionModal && (
-          <AddSubscriptionModal
-            onClose={() => setShowAddSubscriptionModal(false)}
-            onSubmit={addSubscription}
-          />
-        )}
-        {showSendMessageModal && (
-          <SendMessageModal />
-        )}
-        {showReceiveConfigModal && (
-          <ReceiveConfigModal />
-        )}
-        {showMintNFTModal && (
-          <MintNFTModal />
-        )}
+        <SendMessageModal
+          isOpen={showSendMessageModal}
+          onClose={() => setShowSendMessageModal(false)}
+          onSend={(message) => {
+            // Handle send message
+            console.log("Sending message:", message);
+          }}
+        />
+        <ReceiveConfigModal
+          isOpen={showReceiveConfigModal}
+          onClose={() => setShowReceiveConfigModal(false)}
+          onReceive={(config) => {
+            // Handle receive config
+            console.log("Receiving config:", config);
+          }}
+        />
+        <MintNFTModal
+          isOpen={showMintNFTModal}
+          onClose={() => setShowMintNFTModal(false)}
+          onMint={(data) => {
+            // Handle mint NFT
+            console.log("Minting NFT:", data);
+          }}
+        />
       </div>
-    </div>
-  );
-};
-
-// Add Profile Modal
-const AddProfileModal = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: (eid: string, iccid: string, msisdn: string, imei: string, deviceModel: string, osVersion: string, mcc: string, mnc: string, proof: Hex) => void }) => {
-  const [eid, setEid] = useState('');
-  const [iccid, setIccid] = useState('');
-  const [msisdn, setMsisdn] = useState('');
-  const [imei, setImei] = useState('');
-  const [deviceModel, setDeviceModel] = useState('');
-  const [osVersion, setOsVersion] = useState('');
-  const [mcc, setMcc] = useState('');
-  const [mnc, setMnc] = useState('');
-  const [proof, setProof] = useState<Hex>('0x0');
-
-  const handleSubmit = () => {
-    onSubmit(eid, iccid, msisdn, imei, deviceModel, osVersion, mcc, mnc, proof);
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <Card className="bg-white bg-opacity-40 backdrop-blur-lg border-0 shadow-lg p-6 w-96">
-        <CardHeader>
-          <CardTitle>Add New Profile</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="EID"
-              value={eid}
-              onChange={(e) => setEid(e.target.value)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <input
-              type="text"
-              placeholder="ICCID"
-              value={iccid}
-              onChange={(e) => setIccid(e.target.value)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <input
-              type="text"
-              placeholder="MSISDN"
-              value={msisdn}
-              onChange={(e) => setMsisdn(e.target.value)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <input
-              type="text"
-              placeholder="IMEI"
-              value={imei}
-              onChange={(e) => setImei(e.target.value)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <input
-              type="text"
-              placeholder="Device Model"
-              value={deviceModel}
-              onChange={(e) => setDeviceModel(e.target.value)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <input
-              type="text"
-              placeholder="OS Version"
-              value={osVersion}
-              onChange={(e) => setOsVersion(e.target.value)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <input
-              type="text"
-              placeholder="MCC"
-              value={mcc}
-              onChange={(e) => setMcc(e.target.value)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <input
-              type="text"
-              placeholder="MNC"
-              value={mnc}
-              onChange={(e) => setMnc(e.target.value)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <input
-              type="text"
-              placeholder="Proof"
-              value={proof}
-              onChange={(e) => setProof(e.target.value as Hex)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <Button onClick={handleSubmit} className="w-full">
-              Add Profile
-            </Button>
-            <Button variant="outline" onClick={onClose} className="w-full">
-              Cancel
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-// Add Subscription Modal
-const AddSubscriptionModal = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: (plan: string, renewalDate: string) => void }) => {
-  const [plan, setPlan] = useState('');
-  const [renewalDate, setRenewalDate] = useState('');
-
-  const handleSubmit = () => {
-    onSubmit(plan, renewalDate);
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <Card className="bg-white bg-opacity-40 backdrop-blur-lg border-0 shadow-lg p-6 w-96">
-        <CardHeader>
-          <CardTitle>Add New Subscription</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Plan Name"
-              value={plan}
-              onChange={(e) => setPlan(e.target.value)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <input
-              type="date"
-              placeholder="Renewal Date"
-              value={renewalDate}
-              onChange={(e) => setRenewalDate(e.target.value)}
-              className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-            />
-            <Button onClick={handleSubmit} className="w-full">
-              Add Subscription
-            </Button>
-            <Button variant="outline" onClick={onClose} className="w-full">
-              Cancel
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { 
-  SismoConnectClientConfig, 
   SismoConnectClient,
+  SismoConnectConfig,
   AuthType,
   SismoConnectResponse,
   ClaimType
@@ -12,7 +12,7 @@ interface SismoContextType {
   generateChallenge: () => string;
 }
 
-const config: SismoConnectClientConfig = {
+const config: SismoConnectConfig = {
   appId: "0x1234....", // Replace with your Sismo App ID
   vault: {
     impersonate: ["0x1234...."], // Optional: For development
@@ -30,11 +30,12 @@ export const SismoProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyProof = async (response: SismoConnectResponse): Promise<boolean> => {
     try {
-      await sismoConnect.verify(response, {
+      const verification = await sismoConnect.verify({
+        response,
         auths: [{ authType: AuthType.VAULT }],
         claims: [{ claimType: ClaimType.GTE }],
       });
-      return true;
+      return verification.success;
     } catch (error) {
       console.error("ZKP verification failed:", error);
       return false;
