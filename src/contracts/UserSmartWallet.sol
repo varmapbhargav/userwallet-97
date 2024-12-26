@@ -4,11 +4,14 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol"; // For NFT minting
-import "@openzeppelin/contracts/utils/Counters.sol"; // For NFT token ID management
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "./auth/ZKPVerifier.sol";
 
 contract UserSmartWallet is Ownable, ReentrancyGuard, Pausable, ERC721 {
     using Counters for Counters.Counter;
+
+    ZKPVerifier public zkpVerifier;
 
     // Structs
     struct Profile {
@@ -58,6 +61,8 @@ contract UserSmartWallet is Ownable, ReentrancyGuard, Pausable, ERC721 {
     event NetworkConfigReceived(address indexed user, string iccid, string apn, string authenticationKey, string encryptionKey);
     event ESimActivated(address indexed user, string iccid);
     event ESimNFTMinted(address indexed user, uint256 tokenId, string iccid, string qrCodeUri);
+    event ChallengeGenerated(address indexed user, bytes32 challenge);
+    event ProofVerified(address indexed user, bool success);
 
     // Mappings
     mapping(address => mapping(string => Profile)) public profiles;
@@ -94,24 +99,24 @@ contract UserSmartWallet is Ownable, ReentrancyGuard, Pausable, ERC721 {
     }
 
     // Constructor
-    constructor() ERC721("ESimNFT", "ESIM") {
+    constructor(address _zkpVerifier) ERC721("ESimNFT", "ESIM") {
+        zkpVerifier = ZKPVerifier(_zkpVerifier);
         _pause(); // Start paused for security
         unpause(); // Unpause after setup
     }
 
-    // ZKP Verification Function
-    function verifyZKP(bytes32 proof) external whenNotPaused {
-        // Simulate ZKP verification logic (replace with actual ZKP library)
-        bool isValidProof = validateProof(proof);
-        require(isValidProof, "Invalid ZKP proof");
-
-        zkpVerified[msg.sender] = true;
+    // Generate a unique challenge for ZKP
+    function generateChallenge() external returns (bytes32) {
+        bytes32 challenge = keccak256(abi.encodePacked(msg.sender, block.timestamp));
+        emit ChallengeGenerated(msg.sender, challenge);
+        return challenge;
     }
 
-    // Simulated ZKP Validation (Replace with actual ZKP library)
-    function validateProof(bytes32 proof) internal pure returns (bool) {
-        // Placeholder logic for ZKP validation
-        return proof != bytes32(0); // Example: Non-zero proof is valid
+    // Verify the ZKP
+    function verifyZKP(bytes32 challenge, bytes memory proof) external whenNotPaused {
+        bool isValid = zkpVerifier.verifyProof(msg.sender, challenge, proof);
+        require(isValid, "Invalid ZKP proof");
+        zkpVerified[msg.sender] = true;
     }
 
     // Profile Management Functions
@@ -128,10 +133,6 @@ contract UserSmartWallet is Ownable, ReentrancyGuard, Pausable, ERC721 {
     ) external whenNotPaused withinProfileLimit requiresZKP {
         require(!profiles[msg.sender][iccid].exists, "Profile already exists");
         
-        // Verify ZKP before proceeding
-        bool isValidProof = validateProof(proof);
-        require(isValidProof, "Invalid ZKP proof");
-
         Profile memory newProfile = Profile({
             eid: eid,
             iccid: iccid,
@@ -161,10 +162,6 @@ contract UserSmartWallet is Ownable, ReentrancyGuard, Pausable, ERC721 {
         Profile storage profile = profiles[msg.sender][iccid];
         require(profile.status != newStatus, "Status already set");
         
-        // Verify ZKP before proceeding
-        bool isValidProof = validateProof(proof);
-        require(isValidProof, "Invalid ZKP proof");
-
         profile.status = newStatus;
         
         emit ProfileStatusUpdated(msg.sender, iccid, newStatus);
@@ -179,10 +176,6 @@ contract UserSmartWallet is Ownable, ReentrancyGuard, Pausable, ERC721 {
     ) external payable whenNotPaused profileExists(iccid) nonReentrant requiresZKP {
         require(msg.value >= MINIMUM_DEPOSIT, "Insufficient payment");
         require(profiles[msg.sender][iccid].status == ProfileStatus.Active, "Profile not active");
-
-        // Verify ZKP before proceeding
-        bool isValidProof = validateProof(proof);
-        require(isValidProof, "Invalid ZKP proof");
 
         Subscription memory newSub = Subscription({
             planId: planId,
@@ -206,10 +199,6 @@ contract UserSmartWallet is Ownable, ReentrancyGuard, Pausable, ERC721 {
     ) external whenNotPaused requiresZKP {
         require(to != address(0), "Invalid recipient");
 
-        // Verify ZKP before proceeding
-        bool isValidProof = validateProof(proof);
-        require(isValidProof, "Invalid ZKP proof");
-
         emit MessageSent(msg.sender, to, encryptedMessage);
     }
 
@@ -222,10 +211,6 @@ contract UserSmartWallet is Ownable, ReentrancyGuard, Pausable, ERC721 {
         bytes32 proof
     ) external whenNotPaused profileExists(iccid) requiresZKP {
         require(!networkConfigs[msg.sender][iccid].activated, "Network config already received");
-
-        // Verify ZKP before proceeding
-        bool isValidProof = validateProof(proof);
-        require(isValidProof, "Invalid ZKP proof");
 
         NetworkConfig memory newConfig = NetworkConfig({
             apn: apn,
@@ -244,9 +229,6 @@ contract UserSmartWallet is Ownable, ReentrancyGuard, Pausable, ERC721 {
         NetworkConfig storage config = networkConfigs[msg.sender][iccid];
         require(config.activated, "Network config not received");
 
-        // Mark eSIM as activated
-        config.activated = true;
-
         emit ESimActivated(msg.sender, iccid);
     }
 
@@ -258,12 +240,10 @@ contract UserSmartWallet is Ownable, ReentrancyGuard, Pausable, ERC721 {
     ) external whenNotPaused profileExists(iccid) requiresZKP {
         require(networkConfigs[msg.sender][iccid].activated, "eSIM not activated");
 
-        // Mint NFT
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _mint(msg.sender, tokenId);
 
-        // Store NFT metadata
         eSimNFTMetadata[tokenId] = ESimNFTMetadata({
             iccid: iccid,
             qrCodeUri: qrCodeUri,

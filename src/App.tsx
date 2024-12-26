@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { MessageProvider } from "@/contexts/MessageContext";
+import { SismoProvider } from "@/contexts/SismoContext";
 import Index from "./pages/Index";
 import UserDashboard from "./pages/UserDashboard";
 
@@ -14,16 +15,18 @@ const App = () => (
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
       <WalletProvider>
-        <MessageProvider>
-          <TooltipProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<UserDashboard />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
-        </MessageProvider>
+        <SismoProvider>
+          <MessageProvider>
+            <TooltipProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/dashboard" element={<UserDashboard />} />
+              </Routes>
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          </MessageProvider>
+        </SismoProvider>
       </WalletProvider>
     </QueryClientProvider>
   </BrowserRouter>
