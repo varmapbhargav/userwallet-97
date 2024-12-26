@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Bell } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, Cpu, Calendar, MessageSquare, Plus, Edit, Trash2 } from 'lucide-react';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
-import { createWalletClient, http, parseAbi, encodeFunctionData, decodeEventLog, type Hex, parseEther } from 'viem';
-import { mainnet } from 'viem/chains';
+import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
+import { ProfileManagement } from '@/components/dashboard/ProfileManagement';
+import { SubscriptionManagement } from '@/components/dashboard/SubscriptionManagement';
 import { ChatInterface } from "@/components/messaging/ChatInterface";
+import { WalletTab } from '@/components/wallet/WalletTab';
 import { SendMessageModal } from "@/components/modals/SendMessageModal";
 import { ReceiveConfigModal } from "@/components/modals/ReceiveConfigModal";
 import { MintNFTModal } from "@/components/modals/MintNFTModal";
@@ -180,172 +179,6 @@ const UserDashboard = () => {
     setShowMintNFTModal(false);
   };
 
-  // Dashboard Overview Component
-  const DashboardOverview = () => (
-    <div className="space-y-6">
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { title: 'Active Profiles', count: profiles.length, icon: Cpu },
-          { title: 'Active Subscriptions', count: subscriptions.filter((sub) => sub.status === 'Active').length, icon: Calendar },
-          { title: 'Unread Messages', count: messages.length, icon: MessageSquare },
-        ].map((stat, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Card className="bg-white bg-opacity-40 backdrop-blur-lg border-0 shadow-lg">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-800">{stat.count}</p>
-                </div>
-                <stat.icon className="w-8 h-8 text-blue-500" />
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Recent Notifications */}
-      <Card className="bg-white bg-opacity-40 backdrop-blur-lg border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle>Recent Notifications</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className="p-4 rounded-lg bg-white bg-opacity-50 backdrop-blur-sm"
-              >
-                <div className="flex justify-between items-center">
-                  <p className="text-gray-800">{notification.message}</p>
-                  <p className="text-sm text-gray-600">{notification.time}</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => markNotificationAsRead(notification.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  // Profile Management Component
-  const ProfileManagement = () => (
-    <Card className="bg-white bg-opacity-40 backdrop-blur-lg border-0 shadow-lg">
-      <CardHeader>
-        <CardTitle>Profile Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {profiles.map((profile) => (
-            <div
-              key={profile.id}
-              className="p-4 rounded-lg bg-white bg-opacity-50 backdrop-blur-sm"
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium text-gray-800">{profile.operator}</p>
-                  <p className="text-sm text-gray-600">ICCID: {profile.iccid}</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    profile.status === 'Active' 
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {profile.status}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => updateProfileStatus(profile.id, profile.status === 'Active' ? 'Suspended' : 'Active')}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteProfile(profile.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-          <Button onClick={() => setShowAddProfileModal(true)} className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Profile
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  // Subscription Management Component
-  const SubscriptionManagement = () => (
-    <Card className="bg-white bg-opacity-40 backdrop-blur-lg border-0 shadow-lg">
-      <CardHeader>
-        <CardTitle>Subscription Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {subscriptions.map((subscription) => (
-            <div
-              key={subscription.id}
-              className="p-4 rounded-lg bg-white bg-opacity-50 backdrop-blur-sm"
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium text-gray-800">{subscription.plan}</p>
-                  <p className="text-sm text-gray-600">
-                    Renewal: {new Date(subscription.renewalDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    subscription.status === 'Active' 
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {subscription.status}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteSubscription(subscription.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-          <Button onClick={() => setShowAddSubscriptionModal(true)} className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Subscription
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  // Messaging Interface
-  const MessagingInterface = () => (
-    <ChatInterface />
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -368,13 +201,24 @@ const UserDashboard = () => {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-white bg-opacity-20 backdrop-blur-lg">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="wallet">Wallet</TabsTrigger>
             <TabsTrigger value="profiles">Profile Management</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscription Management</TabsTrigger>
             <TabsTrigger value="messages">Messaging</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
-            <DashboardOverview />
+            <DashboardOverview 
+              profiles={profiles}
+              subscriptions={subscriptions}
+              messages={messages}
+              notifications={notifications}
+              markNotificationAsRead={markNotificationAsRead}
+            />
+          </TabsContent>
+
+          <TabsContent value="wallet">
+            <WalletTab />
           </TabsContent>
 
           <TabsContent value="profiles">
@@ -386,7 +230,7 @@ const UserDashboard = () => {
           </TabsContent>
 
           <TabsContent value="messages">
-            <MessagingInterface />
+            <ChatInterface />
           </TabsContent>
         </Tabs>
 
@@ -394,26 +238,17 @@ const UserDashboard = () => {
         <SendMessageModal
           isOpen={showSendMessageModal}
           onClose={() => setShowSendMessageModal(false)}
-          onSend={(message) => {
-            // Handle send message
-            console.log("Sending message:", message);
-          }}
+          onSend={sendMessage}
         />
         <ReceiveConfigModal
           isOpen={showReceiveConfigModal}
           onClose={() => setShowReceiveConfigModal(false)}
-          onReceive={(config) => {
-            // Handle receive config
-            console.log("Receiving config:", config);
-          }}
+          onReceive={receiveNetworkConfig}
         />
         <MintNFTModal
           isOpen={showMintNFTModal}
           onClose={() => setShowMintNFTModal(false)}
-          onMint={(data) => {
-            // Handle mint NFT
-            console.log("Minting NFT:", data);
-          }}
+          onMint={mintNFT}
         />
       </div>
     </div>
