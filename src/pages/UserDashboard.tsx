@@ -10,6 +10,8 @@ import { WalletTab } from '@/components/wallet/WalletTab';
 import { SendMessageModal } from "@/components/modals/SendMessageModal";
 import { ReceiveConfigModal } from "@/components/modals/ReceiveConfigModal";
 import { MintNFTModal } from "@/components/modals/MintNFTModal";
+import { useWalletContext } from '@/contexts/WalletContext';
+import { createWalletClient, mainnet, http } from 'viem';
 
 const UserDashboard = () => {
   // State management
@@ -17,124 +19,41 @@ const UserDashboard = () => {
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
-  const [showAddProfileModal, setShowAddProfileModal] = useState(false);
-  const [showAddSubscriptionModal, setShowAddSubscriptionModal] = useState(false);
   const [showSendMessageModal, setShowSendMessageModal] = useState(false);
   const [showReceiveConfigModal, setShowReceiveConfigModal] = useState(false);
   const [showMintNFTModal, setShowMintNFTModal] = useState(false);
 
-  // Web3 Client and Contract
-  const [walletClient, setWalletClient] = useState<any | null>(null);
-  const [contractAddress, setContractAddress] = useState<Hex>("0xYourContractAddress"); // Replace with your contract address
-  const UserSmartWalletABI = []
-  // Mock data for profiles, subscriptions, notifications, and messages
-  const mockProfiles = [
-    { id: 1, iccid: '8991000012345678901', operator: 'Verizon', status: 'Active' },
-    { id: 2, iccid: '8991000012345678902', operator: 'AT&T', status: 'Suspended' },
-  ];
+  const { walletClient } = useWalletContext();
 
-  const mockSubscriptions = [
-    { id: 1, plan: 'Premium 5G', status: 'Active', renewalDate: '2024-12-30' },
-    { id: 2, plan: 'Global Roaming', status: 'Expired', renewalDate: '2024-12-15' },
-  ];
-
-  const mockNotifications = [
-    { id: 1, message: 'Profile activation successful', time: '2 hours ago' },
-    { id: 2, message: 'Payment processed', time: '1 day ago' },
-  ];
-
-  const mockMessages = [
-    { id: 1, sender: 'Admin', text: 'Your subscription plan has been approved.', time: '10:30 AM' },
-    { id: 2, sender: 'User', text: 'Can I get a refund for my subscription?', time: '9:45 AM' },
-  ];
-
-  // Mock data for eSIM activation details
-  const mockNetworkConfig = {
-    iccid: '8991000012345678901',
-    apn: 'internet.provider.com',
-    authenticationKey: 'auth1234',
-    encryptionKey: 'enc5678',
-    activated: true,
-  };
-
-  // Mock data for NFT metadata
-  const mockNFTMetadata = {
-    iccid: '8991000012345678901',
-    qrCodeUri: 'https://example.com/qrcode.png',
-    networkConfigUri: 'https://example.com/network-config.json',
-  };
-
+  // Mock data initialization
   useEffect(() => {
-    // Initialize mock data
+    const mockProfiles = [
+      { id: 1, iccid: '8991000012345678901', operator: 'Verizon', status: 'Active' },
+      { id: 2, iccid: '8991000012345678902', operator: 'AT&T', status: 'Suspended' },
+    ];
+
+    const mockSubscriptions = [
+      { id: 1, plan: 'Premium 5G', status: 'Active', renewalDate: '2024-12-30' },
+      { id: 2, plan: 'Global Roaming', status: 'Expired', renewalDate: '2024-12-15' },
+    ];
+
+    const mockNotifications = [
+      { id: 1, message: 'Profile activation successful', time: '2 hours ago' },
+      { id: 2, message: 'Payment processed', time: '1 day ago' },
+    ];
+
+    const mockMessages = [
+      { id: 1, sender: 'Admin', text: 'Your subscription plan has been approved.', time: '10:30 AM' },
+      { id: 2, sender: 'User', text: 'Can I get a refund for my subscription?', time: '9:45 AM' },
+    ];
+
     setProfiles(mockProfiles);
     setSubscriptions(mockSubscriptions);
     setNotifications(mockNotifications);
     setMessages(mockMessages);
-
-    // Initialize Viem wallet client
-    const initViem = async () => {
-      if ((window as any).ethereum) {
-        const walletClient = createWalletClient({
-          chain: mainnet,
-          transport: http(),
-        });
-        setWalletClient(walletClient);
-      }
-    };
-    initViem();
   }, []);
 
-  // Register a new profile (mock implementation)
-  const registerProfile = async (eid: string, iccid: string, msisdn: string, imei: string, deviceModel: string, osVersion: string, mcc: string, mnc: string, proof: Hex) => {
-    const newProfile = {
-      id: profiles.length + 1,
-      iccid,
-      operator: 'Mock Operator',
-      status: 'Active',
-    };
-    setProfiles([...profiles, newProfile]);
-    setShowAddProfileModal(false);
-  };
-
-  // Update profile status (mock implementation)
-  const updateProfileStatus = (id: number, status: string) => {
-    const updatedProfiles = profiles.map((profile) =>
-      profile.id === id ? { ...profile, status } : profile
-    );
-    setProfiles(updatedProfiles);
-  };
-
-  // Add a new subscription (mock implementation)
-  const addSubscription = (plan: string, renewalDate: string) => {
-    const newSubscription = {
-      id: subscriptions.length + 1,
-      plan,
-      status: 'Active',
-      renewalDate,
-    };
-    setSubscriptions([...subscriptions, newSubscription]);
-    setShowAddSubscriptionModal(false);
-  };
-
-  // Delete a profile (mock implementation)
-  const deleteProfile = (id: number) => {
-    const updatedProfiles = profiles.filter((profile) => profile.id !== id);
-    setProfiles(updatedProfiles);
-  };
-
-  // Delete a subscription (mock implementation)
-  const deleteSubscription = (id: number) => {
-    const updatedSubscriptions = subscriptions.filter((subscription) => subscription.id !== id);
-    setSubscriptions(updatedSubscriptions);
-  };
-
-  // Mark notification as read (mock implementation)
-  const markNotificationAsRead = (id: number) => {
-    const updatedNotifications = notifications.filter((notification) => notification.id !== id);
-    setNotifications(updatedNotifications);
-  };
-
-  // Send a message (mock implementation)
+  // Mock handlers
   const sendMessage = (receiverAddress: string, message: string) => {
     const newMessage = {
       id: messages.length + 1,
@@ -146,37 +65,19 @@ const UserDashboard = () => {
     setShowSendMessageModal(false);
   };
 
-  // Receive network configuration (mock implementation)
-  const receiveNetworkConfig = (iccid: string, apn: string, authenticationKey: string, encryptionKey: string) => {
-    const newConfig = {
-      iccid,
-      apn,
-      authenticationKey,
-      encryptionKey,
-      activated: true,
-    };
-    // Simulate updating the profile with network config
-    const updatedProfiles = profiles.map((profile) =>
-      profile.iccid === iccid ? { ...profile, networkConfig: newConfig } : profile
-    );
-    setProfiles(updatedProfiles);
+  const receiveNetworkConfig = (config: { apn: string; authKey: string; encKey: string; }) => {
+    // Handle network config
     setShowReceiveConfigModal(false);
   };
 
-  // Mint NFT with metadata (mock implementation)
-  const mintNFT = (iccid: string, qrCodeUri: string, networkConfigUri: string) => {
-    const newNFT = {
-      id: profiles.length + 1,
-      iccid,
-      qrCodeUri,
-      networkConfigUri,
-    };
-    // Simulate updating the profile with NFT metadata
-    const updatedProfiles = profiles.map((profile) =>
-      profile.iccid === iccid ? { ...profile, nftMetadata: newNFT } : profile
-    );
-    setProfiles(updatedProfiles);
+  const mintNFT = (data: { iccid: string; qrUri: string; configUri: string; }) => {
+    // Handle NFT minting
     setShowMintNFTModal(false);
+  };
+
+  const markNotificationAsRead = (id: number) => {
+    const updatedNotifications = notifications.filter((notification) => notification.id !== id);
+    setNotifications(updatedNotifications);
   };
 
   return (

@@ -86,7 +86,7 @@ export const ZKPAuth = ({ onSuccess }: ZKPAuthProps) => {
             color: "white",
             cursor: "pointer",
             transition: "all 0.2s",
-            "&:hover": {
+            ':hover': {
               backgroundColor: "#2563eb",
             },
           }}
