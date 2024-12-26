@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { Waku, createLightNode } from '@waku/sdk';
+import { createLightNode, waitForRemotePeer } from '@waku/sdk';
 import { useWalletContext } from './WalletContext';
 import { toast } from 'sonner';
 
@@ -22,7 +22,7 @@ interface MessageContextType {
 const MessageContext = createContext<MessageContextType | undefined>(undefined);
 
 export const MessageProvider = ({ children }: { children: ReactNode }) => {
-  const [waku, setWaku] = useState<Waku | null>(null);
+  const [wakuNode, setWakuNode] = useState<any | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnecting, setIsConnecting] = useState(false);
   const { account } = useWalletContext();
@@ -33,7 +33,8 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         setIsConnecting(true);
         const node = await createLightNode({ defaultBootstrap: true });
         await node.start();
-        setWaku(node);
+        await waitForRemotePeer(node);
+        setWakuNode(node);
         toast.success('Connected to Waku network');
       } catch (error) {
         console.error('Failed to initialize Waku:', error);
@@ -43,19 +44,19 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    if (!waku) {
+    if (!wakuNode) {
       initWaku();
     }
 
     return () => {
-      if (waku) {
-        waku.stop();
+      if (wakuNode) {
+        wakuNode.stop();
       }
     };
   }, []);
 
   const sendMessage = async (content: string, topic: string) => {
-    if (!waku || !account) {
+    if (!wakuNode || !account) {
       toast.error('Not connected to messaging network');
       return;
     }
@@ -69,8 +70,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         topic,
       };
 
-      // Send message using Waku protocol
-      await waku.relay.send(topic, new TextEncoder().encode(JSON.stringify(message)));
+      await wakuNode.relay.send(topic, new TextEncoder().encode(JSON.stringify(message)));
       
       setMessages(prev => [...prev, message]);
       toast.success('Message sent');
@@ -81,7 +81,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const subscribeToTopic = async (topic: string) => {
-    if (!waku) {
+    if (!wakuNode) {
       toast.error('Not connected to messaging network');
       return;
     }
@@ -96,7 +96,7 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
         }
       };
 
-      await waku.relay.subscribe([topic], callback);
+      await wakuNode.relay.subscribe([topic], callback);
       toast.success(`Subscribed to topic: ${topic}`);
     } catch (error) {
       console.error('Failed to subscribe to topic:', error);
@@ -105,10 +105,10 @@ export const MessageProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const unsubscribeFromTopic = async (topic: string) => {
-    if (!waku) return;
+    if (!wakuNode) return;
 
     try {
-      await waku.relay.unsubscribe([topic]);
+      await wakuNode.relay.unsubscribe([topic]);
       toast.success(`Unsubscribed from topic: ${topic}`);
     } catch (error) {
       console.error('Failed to unsubscribe from topic:', error);

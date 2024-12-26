@@ -7,6 +7,7 @@ import { Bell, Cpu, Calendar, MessageSquare, Plus, Edit, Trash2 } from 'lucide-r
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { createWalletClient, http, parseAbi, encodeFunctionData, decodeEventLog, type Hex, parseEther } from 'viem';
 import { mainnet } from 'viem/chains';
+import { ChatInterface } from "@/components/messaging/ChatInterface";
 
 const UserDashboard = () => {
   // State management
@@ -23,7 +24,7 @@ const UserDashboard = () => {
   // Web3 Client and Contract
   const [walletClient, setWalletClient] = useState<any | null>(null);
   const [contractAddress, setContractAddress] = useState<Hex>("0xYourContractAddress"); // Replace with your contract address
-const UserSmartWalletABI = []
+  const UserSmartWalletABI = []
   // Mock data for profiles, subscriptions, notifications, and messages
   const mockProfiles = [
     { id: 1, iccid: '8991000012345678901', operator: 'Verizon', status: 'Active' },
@@ -339,140 +340,7 @@ const UserSmartWalletABI = []
 
   // Messaging Interface
   const MessagingInterface = () => (
-    <Card className="bg-white bg-opacity-40 backdrop-blur-lg border-0 shadow-lg">
-      <CardHeader>
-        <CardTitle>Messages</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className="p-4 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm">
-              <p className="font-medium text-gray-800">{message.sender}</p>
-              <p className="text-sm text-gray-600">{message.text}</p>
-              <p className="text-xs text-gray-500">{message.time}</p>
-            </div>
-          ))}
-          <Button onClick={() => setShowSendMessageModal(true)} className="w-full">
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Send Message
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  // Send Message Modal
-  const SendMessageModal = () => (
-    <Dialog open={showSendMessageModal} onOpenChange={setShowSendMessageModal}>
-      <DialogContent className="bg-white bg-opacity-20 backdrop-blur-lg border-0 shadow-lg">
-        <DialogHeader>
-          <DialogTitle>Send Message</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="Recipient Address"
-            className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-          />
-          <textarea
-            placeholder="Message"
-            className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-          />
-          <Button className="w-full" onClick={() => sendMessage('recipientAddress', 'message')}>
-            Send
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-
-  // Receive Network Configuration Modal
-  const ReceiveConfigModal = () => (
-    <Dialog open={showReceiveConfigModal} onOpenChange={setShowReceiveConfigModal}>
-      <DialogContent className="bg-white bg-opacity-20 backdrop-blur-lg border-0 shadow-lg">
-        <DialogHeader>
-          <DialogTitle>Receive Network Configuration</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="ICCID"
-            defaultValue={mockNetworkConfig.iccid}
-            className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-          />
-          <input
-            type="text"
-            placeholder="APN"
-            defaultValue={mockNetworkConfig.apn}
-            className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-          />
-          <input
-            type="text"
-            placeholder="Authentication Key"
-            defaultValue={mockNetworkConfig.authenticationKey}
-            className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-          />
-          <input
-            type="text"
-            placeholder="Encryption Key"
-            defaultValue={mockNetworkConfig.encryptionKey}
-            className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-          />
-          <Button
-            className="w-full"
-            onClick={() => receiveNetworkConfig(
-              mockNetworkConfig.iccid,
-              mockNetworkConfig.apn,
-              mockNetworkConfig.authenticationKey,
-              mockNetworkConfig.encryptionKey
-            )}
-          >
-            Receive Configuration
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-
-  // Mint NFT Modal
-  const MintNFTModal = () => (
-    <Dialog open={showMintNFTModal} onOpenChange={setShowMintNFTModal}>
-      <DialogContent className="bg-white bg-opacity-20 backdrop-blur-lg border-0 shadow-lg">
-        <DialogHeader>
-          <DialogTitle>Mint NFT</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="ICCID"
-            defaultValue={mockNFTMetadata.iccid}
-            className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-          />
-          <input
-            type="text"
-            placeholder="QR Code URI"
-            defaultValue={mockNFTMetadata.qrCodeUri}
-            className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-          />
-          <input
-            type="text"
-            placeholder="Network Config URI"
-            defaultValue={mockNFTMetadata.networkConfigUri}
-            className="w-full p-2 rounded-lg bg-white bg-opacity-30 backdrop-blur-sm border"
-          />
-          <Button
-            className="w-full"
-            onClick={() => mintNFT(
-              mockNFTMetadata.iccid,
-              mockNFTMetadata.qrCodeUri,
-              mockNFTMetadata.networkConfigUri
-            )}
-          >
-            Mint NFT
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <ChatInterface />
   );
 
   return (
